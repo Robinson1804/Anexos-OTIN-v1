@@ -1,11 +1,18 @@
 import express from 'express';
 import cors from 'cors';
 import bcrypt from 'bcryptjs';
+import { join, dirname } from 'path';
+import { fileURLToPath } from 'url';
 import pool from './db.js';
+
+const __serverDir = dirname(fileURLToPath(import.meta.url));
 
 const app = express();
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
+
+// Serve static frontend in production
+app.use(express.static(join(__serverDir, '..', 'dist')));
 
 // ============================================================
 // AUTH
@@ -405,11 +412,42 @@ app.get('/api/stats', async (req, res) => {
   }
 });
 
+// SPA catch-all: serve index.html for non-API routes
+app.get('*', (req, res) => {
+  res.sendFile(join(__serverDir, '..', 'dist', 'index.html'));
+});
+
+// ============================================================
+// AUTO-SEED: crear tablas y datos si no existen
+// ============================================================
+import { readFileSync } from 'fs';
+
+async function autoSeed() {
+  try {
+    const { rows } = await pool.query("SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'empleados')");
+    if (rows[0].exists) {
+      // Check if there's data
+      const count = await pool.query('SELECT COUNT(*) FROM empleados');
+      if (parseInt(count.rows[0].count) > 0) {
+        console.log('DB already seeded, skipping.');
+        return;
+      }
+    }
+    console.log('Running seed...');
+    const sql = readFileSync(join(__serverDir, 'seed.sql'), 'utf-8');
+    await pool.query(sql);
+    console.log('Seed completed!');
+  } catch (err) {
+    console.error('Seed error:', err.message);
+  }
+}
+
 // ============================================================
 // START
 // ============================================================
 
-const PORT = 3001;
-app.listen(PORT, () => {
-  console.log(`SASI-INEI API corriendo en http://localhost:${PORT}`);
+const PORT = process.env.PORT || 3001;
+app.listen(PORT, async () => {
+  console.log(`SASI-INEI API corriendo en puerto ${PORT}`);
+  await autoSeed();
 });
