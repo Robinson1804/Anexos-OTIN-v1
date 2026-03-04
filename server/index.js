@@ -338,6 +338,28 @@ app.delete('/api/solicitudes/:id', async (req, res) => {
   }
 });
 
+// Limpiar todas las solicitudes de un empleado (admin utility)
+app.delete('/api/solicitudes/limpiar/:dni', async (req, res) => {
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const dni = req.params.dni;
+    await client.query('DELETE FROM historial_estados WHERE solicitud_id IN (SELECT id FROM solicitudes WHERE dni = $1)', [dni]);
+    await client.query('DELETE FROM solicitud_detalles WHERE solicitud_id IN (SELECT id FROM solicitudes WHERE dni = $1)', [dni]);
+    await client.query('DELETE FROM solicitud_servicios WHERE solicitud_id IN (SELECT id FROM solicitudes WHERE dni = $1)', [dni]);
+    await client.query('DELETE FROM perfil_ti WHERE dni = $1', [dni]);
+    await client.query('DELETE FROM solicitudes WHERE dni = $1', [dni]);
+    await client.query('COMMIT');
+    res.json({ ok: true, message: `Solicitudes de ${dni} eliminadas` });
+  } catch (err) {
+    await client.query('ROLLBACK');
+    console.error(err);
+    res.status(500).json({ error: 'Error interno' });
+  } finally {
+    client.release();
+  }
+});
+
 // ============================================================
 // PERFIL TI
 // ============================================================
