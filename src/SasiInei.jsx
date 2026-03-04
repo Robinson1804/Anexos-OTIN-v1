@@ -25,16 +25,16 @@ const OPERACIONES = ["Creación", "Actualización", "Baja", "Desactivación"];
 const SEDES = ["Sede Central", "Sede Arenales", "Sede Salas", "Sede Regional", "Otra"];
 
 const EMPLEADOS_MOCK = [
-  { dni: "45678901", nombres: "Carlos Alberto Mendoza Ríos", cargo: "Analista de Sistemas", correo: "cmendoza@inei.gob.pe", telefono: "2017", vinculo: "Nombrado", oficina: "Oficina Técnica de Informática", sede: "Sede Central", ordenServicio: "" },
-  { dni: "32165498", nombres: "María Elena Torres Gutiérrez", cargo: "Especialista en Estadística", correo: "mtorres@inei.gob.pe", telefono: "2045", vinculo: "Nombrado", oficina: "Dirección Nacional de Censos y Encuestas", sede: "Sede Central", ordenServicio: "" },
-  { dni: "78945612", nombres: "Juan Pedro García López", cargo: "Coordinador de Proyectos", correo: "jgarcia@inei.gob.pe", telefono: "3012", vinculo: "CAS", oficina: "Dirección Técnica de Demografía e Indicadores Sociales", sede: "Sede Arenales", ordenServicio: "" },
-  { dni: "15935745", nombres: "Rosa Angélica Huamán Chávez", cargo: "Asistente Administrativo", correo: "rhuaman@inei.gob.pe", telefono: "1089", vinculo: "CAS", oficina: "Oficina Técnica de Administración", sede: "Sede Central", ordenServicio: "" },
-  { dni: "95175346", nombres: "Luis Fernando Paredes Soto", cargo: "Consultor en Base de Datos", correo: "lparedes@inei.gob.pe", telefono: "2078", vinculo: "Locador / O.S.", oficina: "Oficina Técnica de Informática", sede: "Sede Central", ordenServicio: "OS-2026-0045" },
-  { dni: "36925814", nombres: "Ana Sofía Vargas Medina", cargo: "Analista Programador", correo: "avargas@inei.gob.pe", telefono: "2034", vinculo: "CAS", oficina: "Oficina Técnica de Informática", sede: "Sede Salas", ordenServicio: "" },
-  { dni: "74185296", nombres: "Roberto Enrique Díaz Flores", cargo: "Jefe de Unidad de Redes", correo: "rdiaz@inei.gob.pe", telefono: "2001", vinculo: "Nombrado", oficina: "Oficina Técnica de Informática", sede: "Sede Central", ordenServicio: "" },
-  { dni: "85274196", nombres: "Patricia Carmen Rojas Villanueva", cargo: "Especialista en Cartografía", correo: "projas@inei.gob.pe", telefono: "4015", vinculo: "Nombrado", oficina: "Dirección Nacional de Censos y Encuestas", sede: "Sede Arenales", ordenServicio: "" },
-  { dni: "65432198", nombres: "Diego Armando Salazar Peña", cargo: "Técnico en Soporte", correo: "dsalazar@inei.gob.pe", telefono: "2056", vinculo: "CAS", oficina: "Oficina Técnica de Informática", sede: "Sede Central", ordenServicio: "" },
-  { dni: "12348765", nombres: "Claudia Isabel Fernández Quispe", cargo: "Consultora de Sistemas", correo: "cfernandez@inei.gob.pe", telefono: "2090", vinculo: "Locador / O.S.", oficina: "Dirección Técnica de Indicadores Económicos", sede: "Sede Central", ordenServicio: "OS-2026-0112" },
+  { dni: "45678901", nombres: "Carlos Alberto Mendoza Ríos", cargo: "Analista de Sistemas", correo: "cmendoza@inei.gob.pe", telefono: "2017", vinculo: "Nombrado", oficina: "Oficina Técnica de Informática", sede: "Sede Central", ordenServicio: "", fechaInicio: "2020-03-01", fechaFin: "", tipoAcceso: "Permanente" },
+  { dni: "32165498", nombres: "María Elena Torres Gutiérrez", cargo: "Especialista en Estadística", correo: "mtorres@inei.gob.pe", telefono: "2045", vinculo: "Nombrado", oficina: "Dirección Nacional de Censos y Encuestas", sede: "Sede Central", ordenServicio: "", fechaInicio: "2018-06-15", fechaFin: "", tipoAcceso: "Permanente" },
+  { dni: "78945612", nombres: "Juan Pedro García López", cargo: "Coordinador de Proyectos", correo: "jgarcia@inei.gob.pe", telefono: "3012", vinculo: "CAS", oficina: "Dirección Técnica de Demografía e Indicadores Sociales", sede: "Sede Arenales", ordenServicio: "", fechaInicio: "2026-01-02", fechaFin: "2026-12-31", tipoAcceso: "temporal" },
+  { dni: "15935745", nombres: "Rosa Angélica Huamán Chávez", cargo: "Asistente Administrativo", correo: "rhuaman@inei.gob.pe", telefono: "1089", vinculo: "CAS", oficina: "Oficina Técnica de Administración", sede: "Sede Central", ordenServicio: "", fechaInicio: "2026-01-02", fechaFin: "2026-12-31", tipoAcceso: "temporal" },
+  { dni: "95175346", nombres: "Luis Fernando Paredes Soto", cargo: "Consultor en Base de Datos", correo: "lparedes@inei.gob.pe", telefono: "2078", vinculo: "Locador / O.S.", oficina: "Oficina Técnica de Informática", sede: "Sede Central", ordenServicio: "OS-2026-0045", fechaInicio: "2026-02-01", fechaFin: "2026-07-31", tipoAcceso: "temporal" },
+  { dni: "36925814", nombres: "Ana Sofía Vargas Medina", cargo: "Analista Programador", correo: "avargas@inei.gob.pe", telefono: "2034", vinculo: "CAS", oficina: "Oficina Técnica de Informática", sede: "Sede Salas", ordenServicio: "", fechaInicio: "2026-01-02", fechaFin: "2026-12-31", tipoAcceso: "temporal" },
+  { dni: "74185296", nombres: "Roberto Enrique Díaz Flores", cargo: "Jefe de Unidad de Redes", correo: "rdiaz@inei.gob.pe", telefono: "2001", vinculo: "Nombrado", oficina: "Oficina Técnica de Informática", sede: "Sede Central", ordenServicio: "", fechaInicio: "2015-08-10", fechaFin: "", tipoAcceso: "Permanente" },
+  { dni: "85274196", nombres: "Patricia Carmen Rojas Villanueva", cargo: "Especialista en Cartografía", correo: "projas@inei.gob.pe", telefono: "4015", vinculo: "Nombrado", oficina: "Dirección Nacional de Censos y Encuestas", sede: "Sede Arenales", ordenServicio: "", fechaInicio: "2019-04-01", fechaFin: "", tipoAcceso: "Permanente" },
+  { dni: "65432198", nombres: "Diego Armando Salazar Peña", cargo: "Técnico en Soporte", correo: "dsalazar@inei.gob.pe", telefono: "2056", vinculo: "CAS", oficina: "Oficina Técnica de Informática", sede: "Sede Central", ordenServicio: "", fechaInicio: "2026-01-02", fechaFin: "2026-12-31", tipoAcceso: "temporal" },
+  { dni: "12348765", nombres: "Claudia Isabel Fernández Quispe", cargo: "Consultora de Sistemas", correo: "cfernandez@inei.gob.pe", telefono: "2090", vinculo: "Locador / O.S.", oficina: "Dirección Técnica de Indicadores Económicos", sede: "Sede Central", ordenServicio: "OS-2026-0112", fechaInicio: "2026-03-01", fechaFin: "2026-08-31", tipoAcceso: "temporal" },
 ];
 
 const emptyForm = () => ({
@@ -538,6 +538,10 @@ function StepUsuario({ form, update }) {
       update("ordenServicio", empleado.ordenServicio);
       update("oficina", empleado.oficina);
       update("sede", empleado.sede);
+      // Auto-llenar fechas de vigencia y tipo de acceso
+      if (empleado.fechaInicio) update("periodoInicio", empleado.fechaInicio);
+      if (empleado.fechaFin) update("periodoFin", empleado.fechaFin);
+      if (empleado.tipoAcceso) update("tipoAcceso", empleado.tipoAcceso);
       setBusquedaEstado("encontrado");
     } else {
       setBusquedaEstado("no_encontrado");
