@@ -55,6 +55,7 @@ const emptyForm = () => ({
   justificacion: "",
   periodoInicio: "",
   periodoFin: "",
+  fechaInicioContrato: "",
   tipoAcceso: "temporal",
   status: "borrador",
   createdAt: Date.now(),
@@ -538,8 +539,8 @@ function StepUsuario({ form, update }) {
       update("ordenServicio", empleado.ordenServicio);
       update("oficina", empleado.oficina);
       update("sede", empleado.sede);
-      // Auto-llenar fechas de vigencia y tipo de acceso
-      if (empleado.fechaInicio) update("periodoInicio", empleado.fechaInicio);
+      // Auto-llenar fecha fin de contrato y tipo de acceso (NO fecha inicio, la pone el usuario)
+      if (empleado.fechaInicio) update("fechaInicioContrato", empleado.fechaInicio);
       if (empleado.fechaFin) update("periodoFin", empleado.fechaFin);
       if (empleado.tipoAcceso) update("tipoAcceso", empleado.tipoAcceso);
       setBusquedaEstado("encontrado");
@@ -1091,6 +1092,9 @@ const tblInput = {
 // STEP JUSTIFICACIÓN
 // ============================================================
 function StepJustificacion({ form, update }) {
+  const fechaMinima = form.fechaInicioContrato || "";
+  const fechaInicioInvalida = fechaMinima && form.periodoInicio && form.periodoInicio < fechaMinima;
+
   return (
     <div>
       <h3 style={{ fontSize: 17, fontWeight: 700, color: theme.text, marginBottom: 4 }}>Justificación y Vigencia</h3>
@@ -1099,9 +1103,34 @@ function StepJustificacion({ form, update }) {
         <TextArea value={form.justificacion} onChange={(v) => update("justificacion", v)}
           placeholder="Describa el motivo por el cual solicita los accesos/servicios..." rows={4} />
       </FieldGroup>
+
+      {/* Info de vigencia del contrato si existe */}
+      {fechaMinima && (
+        <div style={{ marginBottom: 14, padding: "10px 14px", background: "rgba(108,138,255,0.06)", borderRadius: 8, border: "1px solid rgba(108,138,255,0.15)", fontSize: 13, color: theme.accent }}>
+          <strong>Vigencia del contrato/orden:</strong> desde {fechaMinima}{form.periodoFin ? ` hasta ${form.periodoFin}` : " (sin fecha fin)"}
+          <br />
+          <span style={{ fontSize: 12, color: theme.text2 }}>La fecha de inicio del acceso debe ser igual o posterior a la fecha de inicio del contrato.</span>
+        </div>
+      )}
+
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "0 16px" }}>
-        <FieldGroup label="Período Inicio">
-          <Input type="date" value={form.periodoInicio} onChange={(v) => update("periodoInicio", v)} />
+        <FieldGroup label="Período Inicio *">
+          <input
+            type="date"
+            value={form.periodoInicio || ""}
+            min={fechaMinima || undefined}
+            onChange={(e) => update("periodoInicio", e.target.value)}
+            style={{
+              width: "100%", padding: "9px 12px", borderRadius: 8,
+              border: `1px solid ${fechaInicioInvalida ? theme.red : theme.border}`,
+              fontSize: 14, color: theme.text, background: theme.surface2, outline: "none",
+            }}
+          />
+          {fechaInicioInvalida && (
+            <div style={{ fontSize: 11, color: theme.red, marginTop: 4, fontWeight: 600 }}>
+              La fecha debe ser igual o posterior al {fechaMinima}
+            </div>
+          )}
         </FieldGroup>
         <FieldGroup label="Período Fin">
           <Input type="date" value={form.periodoFin} onChange={(v) => update("periodoFin", v)} />
