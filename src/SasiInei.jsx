@@ -626,6 +626,37 @@ function SectionBox({ title, children, color }) {
   );
 }
 
+function InfoTooltip({ text }) {
+  const [show, setShow] = useState(false);
+  return (
+    <span style={{ position: "relative", display: "inline-block", marginLeft: 6, cursor: "pointer" }}
+      onMouseEnter={() => setShow(true)} onMouseLeave={() => setShow(false)}
+      onClick={() => setShow(s => !s)}>
+      <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 16, height: 16, borderRadius: "50%", background: "rgba(108,138,255,0.15)", color: theme.accent, fontSize: 11, fontWeight: 700 }}>?</span>
+      {show && (
+        <div style={{ position: "absolute", bottom: "calc(100% + 6px)", left: "50%", transform: "translateX(-50%)", background: "#1e2330", color: "#fff", padding: "8px 12px", borderRadius: 8, fontSize: 12, lineHeight: 1.5, width: 260, zIndex: 50, boxShadow: "0 4px 16px rgba(0,0,0,0.18)", whiteSpace: "normal" }}>
+          {text}
+          <div style={{ position: "absolute", top: "100%", left: "50%", transform: "translateX(-50%)", width: 0, height: 0, borderLeft: "6px solid transparent", borderRight: "6px solid transparent", borderTop: "6px solid #1e2330" }} />
+        </div>
+      )}
+    </span>
+  );
+}
+
+function InfoBox({ type, children }) {
+  const styles = {
+    warning: { bg: "rgba(217,119,6,0.06)", border: "rgba(217,119,6,0.2)", icon: "\u26A0", color: theme.orange },
+    info: { bg: "rgba(108,138,255,0.06)", border: "rgba(108,138,255,0.2)", icon: "\u2139", color: theme.accent },
+    conditions: { bg: "rgba(30,35,48,0.04)", border: "rgba(30,35,48,0.12)", icon: "\uD83D\uDCCB", color: theme.text },
+  };
+  const s = styles[type] || styles.info;
+  return (
+    <div style={{ padding: "12px 16px", background: s.bg, border: `1px solid ${s.border}`, borderRadius: 8, marginBottom: 16, fontSize: 12, lineHeight: 1.6, color: s.color }}>
+      <span style={{ marginRight: 6 }}>{s.icon}</span>{children}
+    </div>
+  );
+}
+
 // ============================================================
 // FORM STEPS
 // ============================================================
@@ -773,15 +804,7 @@ function StepDetalle({ form, setForm, updateDetail }) {
       </div>
 
       {openTab === "c1" && <DetalleC1 data={d("c1")} updateDetail={updateDetail} updateDetailObj={updateDetailObj} />}
-      {openTab === "c4" && (
-        <div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 16px" }}>
-            <FieldGroup label="Fecha de Inicio"><Input type="date" value={d("c4").fechaInicio} onChange={v => updateDetail("c4", "fechaInicio", v)} /></FieldGroup>
-            <FieldGroup label="Fecha de Término"><Input type="date" value={d("c4").fechaFin} onChange={v => updateDetail("c4", "fechaFin", v)} /></FieldGroup>
-          </div>
-          <FieldGroup label="Justificación del acceso remoto"><TextArea value={d("c4").justificacion} onChange={v => updateDetail("c4", "justificacion", v)} placeholder="Indique el motivo por el cual requiere acceso VPN..." /></FieldGroup>
-        </div>
-      )}
+      {openTab === "c4" && <DetalleC4 data={d("c4")} updateDetail={updateDetail} form={form} />}
       {openTab === "c5" && (
         <div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 16px" }}>
@@ -799,7 +822,16 @@ function StepDetalle({ form, setForm, updateDetail }) {
             <FieldGroup label="Servidor"><Input value={d("c7").servidor} onChange={v => updateDetail("c7", "servidor", v)} placeholder="Ej: \\SAN01" /></FieldGroup>
             <FieldGroup label="Carpeta Compartida"><Input value={d("c7").carpeta} onChange={v => updateDetail("c7", "carpeta", v)} placeholder="Ej: \\SAN01\\FICHAS" /></FieldGroup>
           </div>
-          <FieldGroup label="Nivel de Permiso"><Select value={d("c7").permisos} onChange={v => updateDetail("c7", "permisos", v)} options={["Lectura", "Escritura", "Control Total"]} /></FieldGroup>
+          <FieldGroup label={<span>Nivel de Permiso <InfoTooltip text="Lectura: solo ver/copiar archivos. Escritura: ver, copiar, crear, editar archivos. Control Total: todos los permisos incluyendo eliminar y cambiar permisos de subcarpetas." /></span>}>
+            <Select value={d("c7").permisos} onChange={v => updateDetail("c7", "permisos", v)} options={["Lectura", "Escritura", "Control Total"]} />
+          </FieldGroup>
+          {d("c7").permisos && (
+            <div style={{ padding: "8px 14px", background: "rgba(45,212,191,0.06)", border: "1px solid rgba(45,212,191,0.15)", borderRadius: 8, marginBottom: 12, fontSize: 12, color: theme.text2, lineHeight: 1.5 }}>
+              {d("c7").permisos === "Lectura" && <><strong style={{ color: theme.text }}>Lectura:</strong> Permite ver y copiar archivos de la carpeta compartida. No permite crear, modificar ni eliminar archivos.</>}
+              {d("c7").permisos === "Escritura" && <><strong style={{ color: theme.text }}>Escritura:</strong> Permite ver, copiar, crear y editar archivos en la carpeta. No permite eliminar archivos ni modificar permisos.</>}
+              {d("c7").permisos === "Control Total" && <><strong style={{ color: theme.text }}>Control Total:</strong> Todos los permisos: leer, crear, editar, eliminar archivos y gestionar permisos de subcarpetas. Úsese con precaución.</>}
+            </div>
+          )}
           <FieldGroup label="Justificación"><TextArea value={d("c7").justificacion} onChange={v => updateDetail("c7", "justificacion", v)} placeholder="Justifique..." /></FieldGroup>
         </div>
       )}
@@ -830,9 +862,16 @@ function DetalleC1({ data, updateDetail }) {
         <Checkbox checked={det.internet} onChange={v => updateDetail("c1", "internet", v)} label="Solicitar acceso a Internet" />
         {det.internet && (
           <div style={{ marginTop: 8 }}>
-            <FieldGroup label="Perfil de Internet">
+            <FieldGroup label={<span>Perfil de Internet <InfoTooltip text="Los perfiles determinan el nivel de acceso a Internet. Seleccione el perfil acorde a las necesidades de su función." /></span>}>
               <Select value={det.perfilInternet} onChange={v => updateDetail("c1", "perfilInternet", v)} options={[{ value: "1", label: "Perfil 1 - Avanzado" }, { value: "2", label: "Perfil 2 - Intermedio" }, { value: "3", label: "Perfil 3 - Básico" }]} />
             </FieldGroup>
+            {det.perfilInternet && (
+              <div style={{ padding: "10px 14px", background: "rgba(52,211,153,0.06)", border: "1px solid rgba(52,211,153,0.15)", borderRadius: 8, marginBottom: 12, fontSize: 12, color: theme.text2, lineHeight: 1.6 }}>
+                {det.perfilInternet === "1" && <><strong style={{ color: theme.text }}>Perfil 1 — Avanzado:</strong> Incluye todo lo del Perfil Intermedio + acceso a redes sociales (Facebook, X, LinkedIn), plataformas de streaming y sitios multimedia.</>}
+                {det.perfilInternet === "2" && <><strong style={{ color: theme.text }}>Perfil 2 — Intermedio:</strong> Incluye todo lo del Perfil Básico + correo web (Gmail, Outlook), navegación general en internet. No incluye streaming ni redes sociales.</>}
+                {det.perfilInternet === "3" && <><strong style={{ color: theme.text }}>Perfil 3 — Básico:</strong> Acceso limitado a sitios institucionales (gobierno, educación), noticias y motores de búsqueda.</>}
+              </div>
+            )}
             {det.perfilInternet === "1" && <FieldGroup label="Redes Sociales"><RadioGroup value={det.redesSociales} onChange={v => updateDetail("c1", "redesSociales", v)} options={["Con redes sociales", "Sin redes sociales"]} name="redesSociales" /></FieldGroup>}
             <FieldGroup label="Justificación del acceso a Internet"><TextArea value={det.justificacionInternet} onChange={v => updateDetail("c1", "justificacionInternet", v)} placeholder="Describa por qué necesita acceso a Internet..." /></FieldGroup>
           </div>
@@ -851,6 +890,29 @@ function DetalleC1({ data, updateDetail }) {
   );
 }
 
+// ---- C4: Acceso Remoto (VPN) ----
+function DetalleC4({ data, updateDetail, form }) {
+  const det = data || {};
+  return (
+    <div>
+      <SectionBox title="🔗 Datos para Acceso Remoto (VPN)" color="#fb923c">
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 16px" }}>
+          <FieldGroup label="Usuario de Red INEI"><Input value={det.usuarioRed} onChange={v => updateDetail("c4", "usuarioRed", v)} placeholder="Ej: cmendoza" /></FieldGroup>
+          <FieldGroup label={<span>Dirección IP <InfoTooltip text="Solo si requiere una IP específica. Déjelo vacío si no aplica." /></span>}><Input value={det.ip} onChange={v => updateDetail("c4", "ip", v)} placeholder="Opcional — Ej: 192.168.1.50" /></FieldGroup>
+          <FieldGroup label="Correo Personal (contacto)"><Input value={det.correoPersonal || form.correo} onChange={v => updateDetail("c4", "correoPersonal", v)} placeholder="correo@gmail.com" /></FieldGroup>
+          <FieldGroup label="Nombre de Host / Equipo"><Input value={det.hostName} onChange={v => updateDetail("c4", "hostName", v)} placeholder="Ej: LAPTOP-LPAREDES" /></FieldGroup>
+          <FieldGroup label="Teléfono de Contacto"><Input value={det.telefonoContacto || form.telefono} onChange={v => updateDetail("c4", "telefonoContacto", v)} placeholder="Ej: 987654321" /></FieldGroup>
+        </div>
+      </SectionBox>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 16px" }}>
+        <FieldGroup label="Fecha de Inicio"><Input type="date" value={det.fechaInicio} onChange={v => updateDetail("c4", "fechaInicio", v)} /></FieldGroup>
+        <FieldGroup label="Fecha de Término"><Input type="date" value={det.fechaFin} onChange={v => updateDetail("c4", "fechaFin", v)} /></FieldGroup>
+      </div>
+      <FieldGroup label="Justificación del acceso remoto"><TextArea value={det.justificacion} onChange={v => updateDetail("c4", "justificacion", v)} placeholder="Indique el motivo por el cual requiere acceso VPN..." /></FieldGroup>
+    </div>
+  );
+}
+
 const tblInput = { width: "100%", padding: "4px 6px", borderRadius: 4, border: `1px solid ${theme.border}`, fontSize: 12, color: theme.text, background: "#fff", outline: "none", boxSizing: "border-box" };
 
 // ---- C6: Carpeta FTP ----
@@ -863,6 +925,9 @@ function DetalleC6({ data, updateDetail, form }) {
 
   return (
     <div>
+      <InfoBox type="warning">
+        <strong>Responsabilidad del usuario:</strong> El usuario que solicita la carpeta FTP es responsable del contenido almacenado en la misma. La OTIN no se hace responsable por el uso indebido del espacio asignado. El contenido debe ser exclusivamente relacionado con las funciones institucionales.
+      </InfoBox>
       <FieldGroup label="Tipo de solicitud FTP">
         <Select value={det.subTipo} onChange={v => updateDetail("c6", "subTipo", v)} options={[{ value: "generacion", label: "Generación de carpeta FTP" }, { value: "acceso", label: "Acceso FTP (a carpeta existente)" }]} />
       </FieldGroup>
@@ -933,9 +998,16 @@ function DetalleC8({ data, updateDetail }) {
           <FieldGroup label="Fecha de Fin"><Input type="date" value={det.fechaFin} onChange={v => updateDetail("c8", "fechaFin", v)} /></FieldGroup>
         </div>
       )}
-      <FieldGroup label="Tipo de permiso solicitado">
-        {["(i) Lectura de tablas y vistas", "(ii) Escritura de información en tablas", "(iii) Ejecución de procedimientos y funciones", "(iv) Permisos DDL"].map(p => (
-          <Checkbox key={p} checked={permisos.includes(p)} onChange={() => togglePerm(p)} label={p} />
+      <FieldGroup label={<span>Tipo de permiso solicitado <InfoTooltip text="Seleccione los permisos necesarios para su trabajo. Cada permiso tiene un alcance diferente sobre la base de datos." /></span>}>
+        {[
+          { id: "(i) Lectura de tablas y vistas", desc: "SELECT sobre tablas y vistas. Permite consultar datos sin modificarlos." },
+          { id: "(ii) Escritura de información en tablas", desc: "INSERT, UPDATE, DELETE sobre tablas. Permite agregar, modificar y eliminar registros." },
+          { id: "(iii) Ejecución de procedimientos y funciones", desc: "EXECUTE sobre stored procedures y funciones. Permite ejecutar lógica almacenada en la BD." },
+          { id: "(iv) Permisos DDL", desc: "CREATE, ALTER, DROP. Permite crear/modificar/eliminar objetos (tablas, vistas, índices). Solo para desarrollo." },
+        ].map(p => (
+          <div key={p.id} style={{ marginBottom: 6 }}>
+            <Checkbox checked={permisos.includes(p.id)} onChange={() => togglePerm(p.id)} label={<span>{p.id} <InfoTooltip text={p.desc} /></span>} />
+          </div>
         ))}
       </FieldGroup>
       <FieldGroup label="Objetos específicos (opcional)"><Input value={det.objetos} onChange={v => updateDetail("c8", "objetos", v)} placeholder="Ej: tbl_encuesta, vw_resultados" /></FieldGroup>
@@ -953,6 +1025,18 @@ function DetalleC9({ data, updateDetail, form }) {
 
   return (
     <div>
+      <InfoBox type="conditions">
+        <strong>Condiciones de uso del acceso a Sistemas y Aplicativos:</strong>
+        <ol style={{ margin: "8px 0 0 0", paddingLeft: 18, fontSize: 12, lineHeight: 1.7 }}>
+          <li><strong>Contraseña:</strong> La contraseña es personal e intransferible. El usuario es responsable de toda actividad realizada con sus credenciales.</li>
+          <li><strong>Cambio periódico:</strong> El usuario debe cambiar su contraseña periódicamente según las políticas de seguridad establecidas por la OTIN.</li>
+          <li><strong>No compartir credenciales:</strong> Queda prohibido compartir credenciales de acceso con terceros, incluyendo compañeros de trabajo.</li>
+          <li><strong>Uso exclusivo institucional:</strong> El acceso otorgado es exclusivamente para las funciones institucionales indicadas en el sustento.</li>
+          <li><strong>Notificación de incidentes:</strong> Cualquier sospecha de acceso no autorizado debe ser reportada inmediatamente a la OTIN.</li>
+          <li><strong>Vigencia:</strong> El acceso se otorga por el período indicado. Al finalizar, las credenciales serán desactivadas automáticamente.</li>
+          <li><strong>Revocación:</strong> La OTIN se reserva el derecho de revocar el acceso en cualquier momento si se detecta uso indebido.</li>
+        </ol>
+      </InfoBox>
       <FieldGroup label="Nombre del Sistema / Proyecto"><Input value={det.sistema} onChange={v => updateDetail("c9", "sistema", v)} placeholder="Ej: SIGE, REDATAM" /></FieldGroup>
       <div style={{ fontSize: 12, fontWeight: 700, color: theme.text2, marginBottom: 8, marginTop: 8, textTransform: "uppercase" }}>Tabla de usuarios</div>
       {usuarios.map((u, i) => (
@@ -1008,7 +1092,17 @@ function StepDocumento({ form, onSave, onGenerate }) {
         if (det.correoInst) { let corr = det.tipoCorreo || "—"; if (det.capacidadBuzon) corr += ` — ${det.capacidadBuzon}`; items.push(["Correo", corr]); }
         return items;
       }
-      case "c4": return [["Fecha inicio", det.fechaInicio || "—"], ["Fecha término", det.fechaFin || "—"], ...(det.justificacion ? [["Justificación", det.justificacion]] : [])];
+      case "c4": {
+        const items = [];
+        if (det.usuarioRed) items.push(["Usuario de red", det.usuarioRed]);
+        if (det.ip) items.push(["IP", det.ip]);
+        if (det.hostName) items.push(["Host/Equipo", det.hostName]);
+        if (det.correoPersonal) items.push(["Correo contacto", det.correoPersonal]);
+        if (det.telefonoContacto) items.push(["Teléfono contacto", det.telefonoContacto]);
+        items.push(["Fecha inicio", det.fechaInicio || "—"], ["Fecha término", det.fechaFin || "—"]);
+        if (det.justificacion) items.push(["Justificación", det.justificacion]);
+        return items;
+      }
       case "c5": return [["Fecha inicio", det.fechaInicio || "—"], ["Fecha término", det.fechaFin || "—"], ...(det.justificacion ? [["Justificación", det.justificacion]] : [])];
       case "c6": {
         const items = [["Sub-tipo", det.subTipo === "generacion" ? "Generación" : det.subTipo === "acceso" ? "Acceso FTP" : "—"]];
@@ -1039,7 +1133,17 @@ function StepDocumento({ form, onSave, onGenerate }) {
         if (det.internet) { const perfLabel = { "1": "Perfil 1 - Avanzado", "2": "Perfil 2 - Intermedio", "3": "Perfil 3 - Básico" }; let inet = `Internet: ${perfLabel[det.perfilInternet] || "—"}`; if (det.perfilInternet === "1" && det.redesSociales) inet += ` (${det.redesSociales})`; parts.push(inet); }
         if (det.correoInst) { let corr = `Correo: ${det.tipoCorreo || "—"}`; if (det.capacidadBuzon) corr += ` — ${det.capacidadBuzon}`; parts.push(corr); }
         detailRows = parts.join("<br>");
-      } else if (svc.id === "c4" || svc.id === "c5") {
+      } else if (svc.id === "c4") {
+        const parts = [];
+        if (det.usuarioRed) parts.push(`Usuario red: ${det.usuarioRed}`);
+        if (det.ip) parts.push(`IP: ${det.ip}`);
+        if (det.hostName) parts.push(`Host: ${det.hostName}`);
+        if (det.correoPersonal) parts.push(`Correo contacto: ${det.correoPersonal}`);
+        if (det.telefonoContacto) parts.push(`Tel. contacto: ${det.telefonoContacto}`);
+        parts.push(`Inicio: ${det.fechaInicio || "—"} | Término: ${det.fechaFin || "—"}`);
+        if (det.justificacion) parts.push(`<i>Justificación:</i> ${det.justificacion}`);
+        detailRows = parts.join("<br>");
+      } else if (svc.id === "c5") {
         detailRows = `Inicio: ${det.fechaInicio || "—"} | Término: ${det.fechaFin || "—"}`;
         if (det.justificacion) detailRows += `<br><i>Justificación:</i> ${det.justificacion}`;
       } else if (svc.id === "c6") {
@@ -1232,7 +1336,17 @@ function DetailView({ sol, onBack, onDelete, session }) {
         if (det.internet) { const perfLabel = { "1": "Perfil 1 - Avanzado", "2": "Perfil 2 - Intermedio", "3": "Perfil 3 - Básico" }; let inet = `Internet: ${perfLabel[det.perfilInternet] || "—"}`; if (det.perfilInternet === "1" && det.redesSociales) inet += ` (${det.redesSociales})`; parts.push(inet); }
         if (det.correoInst) { let corr = `Correo: ${det.tipoCorreo || "—"}`; if (det.capacidadBuzon) corr += ` — ${det.capacidadBuzon}`; parts.push(corr); }
         detailRows = parts.join("<br>");
-      } else if (svc.id === "c4" || svc.id === "c5") {
+      } else if (svc.id === "c4") {
+        const parts = [];
+        if (det.usuarioRed) parts.push(`Usuario red: ${det.usuarioRed}`);
+        if (det.ip) parts.push(`IP: ${det.ip}`);
+        if (det.hostName) parts.push(`Host: ${det.hostName}`);
+        if (det.correoPersonal) parts.push(`Correo contacto: ${det.correoPersonal}`);
+        if (det.telefonoContacto) parts.push(`Tel. contacto: ${det.telefonoContacto}`);
+        parts.push(`Inicio: ${det.fechaInicio || "—"} | Término: ${det.fechaFin || "—"}`);
+        if (det.justificacion) parts.push(`<i>Justificación:</i> ${det.justificacion}`);
+        detailRows = parts.join("<br>");
+      } else if (svc.id === "c5") {
         detailRows = `Inicio: ${det.fechaInicio || "—"} | Término: ${det.fechaFin || "—"}`;
         if (det.justificacion) detailRows += `<br><i>Justificación:</i> ${det.justificacion}`;
       } else if (svc.id === "c6") {
